@@ -62,6 +62,15 @@
       </div>
     </div>
 
+    <!-- 标签留印凭据核对面板（包装台/发运台） -->
+    <LabelReconciliation
+      v-if="labelRecon.show"
+      :mode="labelRecon.mode"
+      :id="labelRecon.id"
+      @close="labelRecon.show = false"
+      @changed="reload"
+    />
+
     <table class="data-table">
       <thead>
         <tr>
@@ -99,6 +108,15 @@
               type="button"
               @click="viewUpstream(row)" title="查看上游工序">
               查看上游
+            </button>
+            <button
+              v-if="isLabelModule"
+              class="link label-link"
+              type="button"
+              :data-testid="`label-recon-${row.id}`"
+              @click="openLabelRecon(row)"
+              title="查看标签留印凭据与发运核对">
+              标签核对
             </button>
           </td>
         </tr>
@@ -145,6 +163,7 @@ import {
   runAction as applyAction,
 } from '@/api/backend-service'
 import { fetchTraceChain } from '@/api/pipeline-client'
+import LabelReconciliation from './LabelReconciliation.vue'
 import type { EntryRow } from '@/data/types'
 
 const props = defineProps<{ moduleKey: string }>()
@@ -169,6 +188,13 @@ const PROCESS_NAMES: Record<string, string> = {
   trace_code: '溯源码段', shipment: '发运交接',
 }
 const isProcessModule = computed(() => PROCESS_ORDER.includes(meta.key))
+// 标签留印核对（包装台 packing / 发运台 shipment）
+const isLabelModule = computed(() => meta.key === 'packing' || meta.key === 'shipment')
+const labelRecon = ref<{ show: boolean; mode: 'packing' | 'shipment'; id: number }>({
+  show: false,
+  mode: 'packing',
+  id: 0,
+})
 // 批次追溯
 const showTrace = ref(false)
 const traceBatchNo = ref('')
@@ -280,6 +306,14 @@ function viewUpstream(row: EntryRow) {
   }
 }
 
+function openLabelRecon(row: EntryRow) {
+  labelRecon.value = {
+    show: true,
+    mode: meta.key === 'packing' ? 'packing' : 'shipment',
+    id: Number(row.id),
+  }
+}
+
 onMounted(reload)
 </script>
 
@@ -370,6 +404,20 @@ onMounted(reload)
 }
 .trace-link:hover, .upstream-link:hover {
   background: #27ae60;
+  color: white !important;
+}
+.label-link {
+  color: #2f6fed !important;
+  margin-left: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  border: 1px solid #2f6fed;
+  border-radius: 3px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.label-link:hover {
+  background: #2f6fed;
   color: white !important;
 }
 </style>

@@ -24,6 +24,8 @@ class Store:
         self._idempotency: dict[str, dict[str, Any]] = {}
         # 冻结标记：被不合格处置关联的记录 id -> True
         self._frozen: dict[tuple[str, int], str] = {}
+        # 标签留印凭据表：每次印签生成一条不可变凭据，包装台与发运台共享
+        self._tables.setdefault("label_imprint", [])
         # 初始化建种子血缘索引
         self._build_lineage_from_seed()
 
